@@ -2,194 +2,370 @@
   <head>
     <meta charset="UTF-8" />
     <style></style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
 
   <body>
+    <h2 style="font-family: Helvetica; margin-left: 25%">
+      Singapore Covid: What happens when you don't practice social distancing.
+    </h2>
     <div class="tooltip"></div>
-    <svg></svg>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <svg id="legend"></svg>
+    <svg id="svg"></svg>
+    <button
+      onclick="sortByGender()"
+      type="button"
+      style="font-family: Helvetica; position: absolute; left: 20%; top: 70%"
+    >
+      Gender
+    </button>
+
+    <button
+      onclick="sortByVacc()"
+      type="button"
+      style="font-family: Helvetica; position: absolute; left: 25%; top: 70%"
+    >
+      Vaccination
+    </button>
+
+    <button
+      onclick="sortByAge()"
+      type="button"
+      style="font-family: Helvetica; position: absolute; left: 31.5%; top: 70%"
+    >
+      Age
+    </button>
+
+    <button
+      onclick="sortByPride()"
+      type="button"
+      style="font-family: Helvetica; position: absolute; left: 35.2%; top: 70%"
+    >
+      PRIDE
+    </button>
 
     <script>
-      let width = 800,
+      var color_male = "DeepSkyBlue",
+        color_female = "pink";
+
+      var dose0 = "salmon",
+        dose1 = "Moccasin",
+        dose2 = "palegreen";
+
+      var young = "#DCFFD4",
+        mid = "#8EFF88",
+        old = "#68C67D";
+
+      var gender_legends = ["Male", "Female"];
+      var vacc_legends = ["Not Vaccinated", "1 Dose", "2 Dose"];
+      var age_legends = ["0-30", "31-60", "61+"];
+
+      var width = 800,
         height = 800;
 
-      let svg = d3.select("svg").attr("viewBox", "0 0 " + width + " " + height);
+      var svg = d3.select("#svg").attr("width", width).attr("height", height);
+      var svg2 = d3.select("#legend").attr("width", 180).attr("height", height);
 
-      let links_sample = "https://zackreee.github.io/CSC3007-assignment4/links.json";
-      let cases_sample = "https://zackreee.github.io/CSC3007-assignment4/cases.json";
+      var links_sample =
+        "https://zackreee.github.io/CSC3007-assignment4/links.json";
+      var cases_sample =
+        "https://zackreee.github.io/CSC3007-assignment4/cases.json";
+
+      function draw_legends(colors, texts) {
+        var xAnchor = 10,
+          yAnchor = 280,
+          spacing = 20,
+          xTextAnchor = 30;
+        var numOfLegend = colors.length;
+
+        svg2
+          .append("text")
+          .attr("x", xTextAnchor - 12)
+          .attr("y", yAnchor - 10)
+          .attr("stroke", "#2C0800")
+          .style("font-size", 20)
+          .style("font-family", "Courier")
+          .text("Legend");
+
+        for (var i = 0; i < numOfLegend; i++) {
+          svg2
+            .append("rect")
+            .attr("x", xAnchor)
+            .attr("y", yAnchor + spacing * i + 5)
+            .attr("width", 16)
+            .attr("height", 16)
+            .attr("fill", colors[i]);
+
+          svg2
+            .append("text")
+            .attr("x", xTextAnchor)
+            .attr("y", yAnchor + spacing * i + 17)
+            .attr("stroke", "#2C0800")
+            .style("font-size", 14)
+            .style("font-family", "Courier")
+            .text(texts[i]);
+        }
+      }
+
+      function clear_legend() {
+        d3.select("#legend").selectAll("rect").remove();
+        d3.select("#legend").selectAll("text").remove();
+        // d3.select("#legend").remove();
+      }
+
+      function sortByGender() {
+        var g_colors = [color_male, color_female];
+        clear_legend();
+        draw_legends(g_colors, gender_legends);
+        d3.select("#svg")
+          .selectAll("circle")
+          .style("fill", (d) => {
+            if (d.gender == "male") {
+              return color_male;
+            } else {
+              return color_female;
+            }
+          });
+      }
+
+      function sortByVacc() {
+        var g_colors = [dose0, dose1, dose2];
+        clear_legend();
+        draw_legends(g_colors, vacc_legends);
+        d3.select("#svg")
+          .selectAll("circle")
+          .style("fill", (d) => {
+            if (d.vaccinated == "no") {
+              return dose0;
+            } else if (d.vaccinated == "partial (1 dose)") {
+              return dose1;
+            } else {
+              return dose2;
+            }
+          });
+      }
+
+      function sortByAge() {
+        var g_colors = [young, mid, old];
+        clear_legend();
+        draw_legends(g_colors, age_legends);
+        d3.select("#svg")
+          .selectAll("circle")
+          .style("fill", (d) => {
+            if (d.age > 0 && d.age <= 30) {
+              return young;
+            } else if (d.age > 30 && d.age <= 60) {
+              return mid;
+            } else {
+              return old;
+            }
+          });
+      }
+
+      function sortByPride() {
+        g_colors = [
+          "#E74C2B",
+          "orange",
+          "yellow",
+          "#31F831",
+          "#2874F1",
+          "violet",
+        ];
+        var t = ["red", "orange", "yellow", "green", "blue", "violet"];
+        clear_legend();
+        draw_legends(g_colors, t);
+        d3.select("#svg")
+          .selectAll("circle")
+          .style("fill", (d) => {
+            return g_colors[Math.floor(Math.random() * 6)];
+          });
+      }
 
       // Load external data
-      Promise.all([
-        d3.json("links_sample"),
-        d3.json("cases_sample"),
-      ]).then((data) => {
-        // Data preprocessing
-        data[0].forEach((e) => {
-          e.source = e.infector;
-          e.target = e.infectee;
-        });
-
-        console.log(data[0]); //links
-        console.log(data[1]); //cases
-
-        var tooltip = d3
-          .select(".tooltip")
-          .style("background-color", "white")
-          .style("border", "solid black 1px")
-          .style("position", "absolute")
-          .style("visibility", "hidden");
-
-        // reference: http://bl.ocks.org/mbostock/1153292
-        let marker = svg
-          .append("defs")
-          .append("marker")
-          .attr("id", "arrows")
-          .attr("viewBox", "0 -5 10 10")
-          .attr("refX", 40)
-          .attr("refY", -1.5)
-          .attr("markerWidth", 10)
-          .attr("markerHeight", 6)
-          .attr("orient", "auto")
-          .append("path")
-          .attr("d", "M0,-5L10,0L0,5")
-          .attr("fill", "black");
-
-        let linkpath = svg
-          .append("g")
-          .attr("id", "links")
-          .selectAll("path")
-          .data(data[0])
-          .enter()
-          .append("path")
-          .attr("fill", "none")
-          .attr("stroke", "black")
-          .attr("stroke-width", "1")
-          .attr("marker-end", function (d) {
-            return "url(#arrows)";
+      Promise.all([d3.json(links_sample), d3.json(cases_sample)]).then(
+        (data) => {
+          // Data preprocessing
+          data[0].forEach((e) => {
+            e.source = e.infector;
+            e.target = e.infectee;
           });
 
-        let node = svg
-          .append("g")
-          .attr("id", "nodes")
-          .selectAll("circle")
-          .data(data[1])
-          .enter()
-          .append("circle")
-          .attr("r", 20)
-          .style("fill", function (d) {
-            if (d.gender == "male") {
-              return "deepskyblue";
-            } else {
-              return "deeppink";
-            }
-          })
-          .on("mouseenter", function (event, d) {
-            tooltip.transition().duration(100).style("visibility", "visible");
+          sortByGender();
 
-            tooltip
-              .html(
-                "Age: " +
-                  d.age +
-                  "<br>" +
-                  "Nationality: " +
-                  d.nationality +
-                  "<br>" +
-                  "Occupation: " +
-                  d.occupation +
-                  "<br>"
-              )
-              .style("top", event.pageY + "px")
-              .style("left", event.pageX + "px");
-          })
-          .on("mouseleave", function (event, d) {
-            tooltip.transition().duration(100).style("visibility", "hidden");
-          })
-          .call(
-            d3
-              .drag()
-              .on("start", dragstarted)
-              .on("drag", dragged)
-              .on("end", dragended)
-          );
+          var marker = svg;
 
-        let textLayer = svg
-          .append("g")
-          .attr("id", "texts")
-          .selectAll("text")
-          .data(data[1])
-          .enter()
-          .append("text")
-          .text(function (d) {
-            return d.id;
-          })
-          .attr("font-size", "10px")
-          .attr("pointer-events", "none");
+          console.log(data[0]); //links
+          console.log(data[1]); //cases
 
-        let simulation = d3
-          .forceSimulation()
-          .nodes(data[1])
-          .force("x", d3.forceX().x(width / 2))
-          .force("y", d3.forceY().y(height / 2))
-          .force(
-            "link",
-            d3
-              .forceLink(data[0])
-              .id((d) => d.id)
-              .distance(40)
-          )
-          .force("collide", d3.forceCollide().strength(0.1).radius(50))
-          .force("center", d3.forceCenter(400, 200))
-          .on("tick", (d) => {
-            node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+          var tooltip = d3
+            .select(".tooltip")
+            .style("visibility", "hidden")
+            .style("position", "absolute")
+            .style("background-color", "white")
+            .style("border", "black solid 1px")
+            .style("border-radius", "10px");
 
-            linkpath.attr("d", function (d) {
-              var dx = d.target.x - d.source.x,
-                dy = d.target.y - d.source.y,
-                dr = Math.sqrt(dx * dx + dy * dy);
-              return (
-                "M" +
-                d.source.x +
-                "," +
-                d.source.y +
-                "A" +
-                dr +
-                "," +
-                dr +
-                " 0 0,1 " +
-                d.target.x +
-                "," +
-                d.target.y
-              );
+          var marker = svg
+            .append("defs")
+            .append("marker")
+            .attr("id", "arrows")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 8)
+            .attr("refX", 33)
+            .attr("refY", -4.5)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5")
+            .attr("fill", "black");
+
+          var linkpath = svg
+            .append("g")
+            .attr("id", "links")
+            .selectAll("path")
+            .data(data[0])
+            .enter()
+            .append("path")
+            .attr("stroke", "black")
+            .attr("stroke-width", "1")
+            .attr("fill", "none")
+            .attr("marker-end", function (d) {
+              return "url(#arrows)";
             });
 
-            textLayer
-              .attr("x", function (d) {
-                return d.x - 12;
-              })
-              .attr("y", function (d) {
-                return d.y;
+          var node = svg
+            .append("g")
+            .attr("id", "nodes")
+            .selectAll("circle")
+            .data(data[1])
+            .enter()
+            .append("circle")
+            .attr("r", 20)
+            .style("fill", function (d) {
+              if (d.gender == "male") {
+                return color_male;
+              } else {
+                return color_female;
+              }
+            })
+            .on("mouseenter", function (event, d) {
+              tooltip.transition().duration(250).style("visibility", "visible");
+
+              node.filter((n) => n.id === d.id)
+              .attr("stroke-width", 5)
+              .attr("stroke", "black");
+
+              tooltip
+                .html(
+                  "Age: " +
+                    d.age +
+                    "<br>" +
+                    "Vaccination: " +
+                    d.vaccinated +
+                    "<br>" +
+                    "Nationality: " +
+                    d.nationality +
+                    "<br>" +
+                    "Occupation: " +
+                    d.occupation +
+                    "<br>"
+                )
+                .style("padding", "5px")
+                .style("top", event.pageY + "px")
+                .style("left", event.pageX + "px");
+            })
+            .on("mouseleave", function (event, d) {
+                node.filter((n) => n.id === d.id)
+              .attr("stroke-width", 0)
+              .attr("stroke", "black");
+              tooltip.transition().duration(100).style("visibility", "hidden");
+            })
+            .call(
+              d3
+                .drag()
+                .on("start", initDrag)
+                .on("drag", dragging)
+                .on("end", finishDrag)
+            );
+
+          var textLayer = svg
+            .append("g")
+            .attr("id", "texts")
+            .selectAll("text")
+            .data(data[1])
+            .enter()
+            .append("text")
+            .text(function (d) {
+              return d.id;
+            })
+            .attr("font-size", "10px")
+            .attr("pointer-events", "none");
+
+          var simulation = d3
+            .forceSimulation()
+            .nodes(data[1])
+            .force("x", d3.forceX().x(width / 2))
+            .force("y", d3.forceY().y(height / 2))
+            .force(
+              "link",
+              d3
+                .forceLink(data[0])
+                .id((d) => d.id)
+                .distance(40)
+            )
+            .force("collide", d3.forceCollide().strength(0.1).radius(50))
+            .force("center", d3.forceCenter(400, 300))
+            .on("tick", (d) => {
+              node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+
+              linkpath.attr("d", function (d) {
+                var dx = d.target.x - d.source.x,
+                  dy = d.target.y - d.source.y,
+                  dr = Math.sqrt(dx * dx + dy * dy);
+                return (
+                  "M" +
+                  d.source.x +
+                  "," +
+                  d.source.y +
+                  "A" +
+                  dr +
+                  "," +
+                  dr +
+                  " 0 0,1 " +
+                  d.target.x +
+                  "," +
+                  d.target.y
+                );
               });
-          });
 
-        //dragging functions
-        function dragstarted(event, d) {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
-          d.fx = d.x;
-          d.fy = d.y;
-        }
+              textLayer
+                .attr("x", function (d) {
+                  return d.x - 12;
+                })
+                .attr("y", function (d) {
+                  return d.y;
+                });
+            });
 
-        function dragged(event, d) {
-          d.fx = event.x;
-          d.fy = event.y;
-        }
+          //init functions for moving of nodes around
+          function initDrag(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+          }
 
-        function dragended(event, d) {
-          if (!event.active) simulation.alphaTarget(0);
-          d.fx = null;
-          d.fy = null;
+          function dragging(event, input) {
+            input.fx = event.x;
+            input.fy = event.y;
+          }
+
+          function finishDrag(event, input) {
+            if (!event.active) simulation.alphaTarget(0);
+            input.fx = null;
+            input.fy = null;
+          }
         }
-        //end of dragging functions
-      });
+      );
     </script>
   </body>
 </html>
