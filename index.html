@@ -248,7 +248,7 @@
                 return color_female;
               }
             })
-            .on("mouseenter", function (event, d) {
+            .on("mouseenter", function (event, e) {
               tooltip.transition().duration(1500).style("visibility", "visible");
 
               node.filter((n) => n.id === d.id)
@@ -258,24 +258,24 @@
               tooltip
                 .html(
                   "Age: " +
-                    d.age +
+                    e.age +
                     "<br>" +
                     "Vaccination: " +
-                    d.vaccinated +
+                    e.vaccinated +
                     "<br>" +
                     "Nationality: " +
-                    d.nationality +
+                    e.nationality +
                     "<br>" +
                     "Occupation: " +
-                    d.occupation +
+                    e.occupation +
                     "<br>"
                 )
                 .style("padding", "5px")
                 .style("top", event.pageY + "px")
                 .style("left", event.pageX + "px");
             })
-            .on("mouseleave", function (event, d) {
-                node.filter((n) => n.id === d.id)
+            .on("mouseleave", function (event, e) {
+                node.filter((n) => n.id === e.id)
               .attr("stroke-width", 0)
               .attr("stroke", "black");
               tooltip.transition().duration(100).style("visibility", "hidden");
@@ -295,8 +295,8 @@
             .data(data[1])
             .enter()
             .append("text")
-            .text(function (d) {
-              return d.id;
+            .text(function (argument) {
+              return argument.id;
             })
             .attr("font-size", "10px")
             .attr("pointer-events", "none");
