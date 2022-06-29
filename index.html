@@ -107,10 +107,10 @@
         }
       }
 
+    //   clear legends on screen to update
       function clear_legend() {
         d3.select("#legend").selectAll("rect").remove();
         d3.select("#legend").selectAll("text").remove();
-        // d3.select("#legend").remove();
       }
 
       function sortByGender() {
@@ -210,14 +210,14 @@
             .append("marker")
             .attr("id", "arrows")
             .attr("viewBox", "0 -5 10 10")
-            .attr("markerWidth", 10)
-            .attr("markerHeight", 8)
-            .attr("refX", 33)
-            .attr("refY", -4.5)
             .attr("orient", "auto")
+            .attr("markerWidth",11)
+            .attr("markerHeight", 11)
+            .attr("refX", 36)
+            .attr("refY", -5.5)
             .append("path")
-            .attr("d", "M0,-5L10,0L0,5")
-            .attr("fill", "black");
+            .attr("fill", "black")
+            .attr("d", "M0,-5L10,0L0,5");
 
           var linkpath = svg
             .append("g")
@@ -240,7 +240,7 @@
             .data(data[1])
             .enter()
             .append("circle")
-            .attr("r", 20)
+            .attr("r", 30)
             .style("fill", function (d) {
               if (d.gender == "male") {
                 return color_male;
@@ -249,7 +249,7 @@
               }
             })
             .on("mouseenter", function (event, d) {
-              tooltip.transition().duration(250).style("visibility", "visible");
+              tooltip.transition().duration(1500).style("visibility", "visible");
 
               node.filter((n) => n.id === d.id)
               .attr("stroke-width", 5)
@@ -310,10 +310,10 @@
               "link",
               d3
                 .forceLink(data[0])
-                .id((d) => d.id)
+                .id((argument) => argument.id)
                 .distance(40)
             )
-            .force("collide", d3.forceCollide().strength(0.1).radius(50))
+            .force("collide", d3.forceCollide().strength(0.15).radius(60))
             .force("center", d3.forceCenter(400, 300))
             .on("tick", (d) => {
               node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
@@ -339,30 +339,30 @@
               });
 
               textLayer
-                .attr("x", function (d) {
-                  return d.x - 12;
+                .attr("x", function (argument) {
+                  return argument.x - 12;
                 })
-                .attr("y", function (d) {
-                  return d.y;
+                .attr("y", function (argument) {
+                  return argument.y;
                 });
             });
 
           //init functions for moving of nodes around
-          function initDrag(event, d) {
+          function initDrag(event, argument) {
             if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
+            argument.fx = argument.x;
+            argument.fy = argument.y;
           }
 
-          function dragging(event, input) {
-            input.fx = event.x;
-            input.fy = event.y;
+          function dragging(event, argument) {
+            argument.fx = event.x;
+            argument.fy = event.y;
           }
 
-          function finishDrag(event, input) {
+          function finishDrag(event, argument) {
             if (!event.active) simulation.alphaTarget(0);
-            input.fx = null;
-            input.fy = null;
+            argument.fx = null;
+            argument.fy = null;
           }
         }
       );
